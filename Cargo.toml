@@ -1,0 +1,12 @@
+[package]
+name = "partitions"
+version = "0.1.0"
+authors = ["DDOtten <daniel@otten.co>"]
+
+[features]
+default = ["rayon"]
+compact = []
+
+[dependencies]
+bit-vec = { version = "0.5" }
+rayon = { version = "1.0", optional = true }
