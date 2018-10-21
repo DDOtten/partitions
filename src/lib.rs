@@ -23,7 +23,7 @@
 //! store an additional two `usize` values.
 //! This is done by using a few bits of these two values to store the third.
 //! This is a feature and can be enabled by adding the following to your `Cargo.toml` file:
-//! ```
+//! ```toml
 //! [dependencies.partitions]
 //! version = "0.1"
 //! features = ["compact"]
