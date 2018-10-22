@@ -1,5 +1,5 @@
 //! A [disjoint-sets/union-find] implementation of a vector partitioned in sets that allows
-//! for efficient iteration over the elements of a set.
+//! for efficient iteration over elements of a set.
 //!
 //! The main struct of this crate is [`PartitionVec<T>`] which has the functionality of a `Vec<T>`
 //! and in addition devides the elements of this vector in sets.
@@ -30,7 +30,7 @@
 //! ```
 //!
 //! [disjoint-sets/union-find]: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-//! [`PartitionVec<T>`]: struct.PartitionVec.html
+//! [`PartitionVec<T>`]: ../partitions/partition_vec/struct.PartitionVec.html
 
 extern crate bit_vec;
 #[cfg(feature = "rayon")]

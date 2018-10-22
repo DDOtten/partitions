@@ -20,10 +20,16 @@ belong to the same component, or whether adding an edge between them would
 result in a cycle. The Union–Find algorithm is used in high-performance
 implementations of unification. It is also a key component in implementing
 Kruskal's algorithm to find the minimum spanning tree of a graph.
+
 For each element of a `PartitionVec<T>` we need to store three additional
 `usize` values. A more compact implementation is included that has the same
 functionality but only needs to store an additional two `usize` values.
 This is done by using a few bits of these two values to store the third.
+On 32 bit and 64 bit systems we use 3 bits, this means a `PartitionVec<T>` can
+store `536870912` and `2305843009213693952` values respectfully and will
+panic if we go above this limit.
+This is 8 times less than the amount of memory addresses but should still be
+enough for the fast majority of uses.
 This is a feature and can be enabled by adding the following to your
 `Cargo.toml` file:
 ```toml
