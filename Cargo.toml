@@ -1,10 +1,14 @@
 [package]
 name = "partitions"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["DDOtten <daniel@otten.co>"]
 description = "A disjoint-sets/union-find implementation that allows for efficient iteration over elements of a set."
 license = "Apache-2.0"
 repository = "https://github.com/DDOtten/partitions.git"
+keywords = ["union-find", "disjoint-sets"]
+categories = ["algorithms", "data structures"]
+readme = "README.md"
+documentation = "https://docs.rs/partitions"
 
 [features]
 default = ["rayon"]

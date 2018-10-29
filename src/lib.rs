@@ -3,34 +3,45 @@
 //!
 //! The main struct of this crate is [`PartitionVec<T>`] which has the functionality of a `Vec<T>`
 //! and in addition devides the elements of this vector in sets.
-//! The elements each start in their own set and these sets can be joined with the `union` method.
-//! You can check if elements share a set with the `same_set` method and iterate on the elements
-//! in a set with the `set` method.
-//! The `union` and `same_set` methods are extremely fast and have an amortized complexity of
-//! `O(α(n))` where 'α' is the inverse Ackermann function and length `n`.
-//! The `α(n)` has value below 5 for any `n` that can be written in the observable universe.
-//! The next element of the iterator returned by `set` is found in `O(1)` time.
+//! The elements each start in their own set and sets can be joined with the [`union`] method.
+//! You can check if elements share a set with the [`same_set`] method and iterate on the elements
+//! in a set with the [`set`] method.
+//! The [`union`] and [`same_set`] methods are extremely fast and have an amortized complexity of
+//! `O(α(n))` where 'α' is the inverse Ackermann function and `n` is the length.
+//! This complexity is proven to be optimal and `α(n)` has value below 5 for any `n`
+//! that can be written in the observable universe.
+//! The next element of the iterator returned by [`set`] is found in `O(1)` time.
 //!
-//! This can be used for exampte to keep track of the connected components of an undirected graph.
-//! This struct can then be used to determine whether two vertices belong to the same component,
-//! or whether adding an edge between them would result in a cycle.
-//! The Union–Find algorithm is used in high-performance implementations of unification.
+//! The Disjoint-Sets algorithm is used in high-performance implementations of unification.
 //! It is also a key component in implementing Kruskal's algorithm to find the minimum spanning
 //! tree of a graph.
 //!
-//! For each element of a [`PartitionVec<T>`] we need to store three additional `usize` values.
+//! This implementation stores three integers as `usize` values for every element in the
+//! [`PartitionVec<T>`], two values are needed to get the best complexity of the Disjoint-Sets
+//! algorithm and the third is used to allow iteration over sets and other methods like the
+//! [`make_singleton`] method that removes the element of its current set and gives it its own set.
+//!
 //! A more compact implementation is included that has the same functionality but only needs to
-//! store an additional two `usize` values.
-//! This is done by using a few bits of these two values to store the third.
-//! This is a feature and can be enabled by adding the following to your `Cargo.toml` file:
+//! store an additional two `usize` values instead of three for every element.
+//! This is done by using a few bits of these two integers to store the third.
+//! Because this third value is always very small we only need three bits on a 32 or 64 bit system.
+//! This does mean that the maximum amounts of elements stored on 32 and 64 bit systems are
+//! 536 870 912 and 2 305 843 009 213 693 952 respectively.
+//! This limit should never be reached under any normal circumstances but if you do the struct
+//! will panic.
+//! This representation can be enabled by adding the following to your `Cargo.toml` file:
 //! ```toml
 //! [dependencies.partitions]
-//! version = "0.1"
+//! version = "0.2"
 //! features = ["compact"]
 //! ```
 //!
 //! [disjoint-sets/union-find]: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-//! [`PartitionVec<T>`]: ../partitions/partition_vec/struct.PartitionVec.html
+//! [`PartitionVec<T>`]: partition_vec/struct.PartitionVec.html
+//! [`union`]: partition_vec/struct.PartitionVec.html#method.union
+//! [`same_set`]: partition_vec/struct.PartitionVec.html#method.same_set
+//! [`set`]: partition_vec/struct.PartitionVec.html#method.set
+//! [`make_singleton`]: partition_vec/struct.PartitionVec.html#method.make_singleton
 
 extern crate bit_vec;
 #[cfg(feature = "rayon")]
@@ -81,7 +92,7 @@ pub use partition_vec::PartitionVec;
 
 /// This takes an mutable reference and return a mutable reference with a different lifetime.
 ///
-/// This is highly unsafe and every use of this function will have a
+/// This function is highly unsafe and every use of this function will have a
 /// comment explaining why it is necessary.
 /// The main motivation for making a function for this is that the code is not
 /// intuitive and this makes the intend clearer.

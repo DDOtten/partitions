@@ -1,5 +1,8 @@
 use std::cell::Cell;
 
+/// This provides additional information about a given value in the `DisjointSets`.
+///
+/// For each value in the `DisjointSets` we store a `Metadata`.
 #[cfg(not(feature = "compact"))]
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Metadata {
@@ -9,12 +12,13 @@ pub(crate) struct Metadata {
     /// A link to another index.
     /// These form a circular linked list in its subset.
     link: Cell<usize>,
-    /// Rank
+    /// A maximum to the size of the tree of the set.
     rank: Cell<usize>,
 }
 
 #[cfg(not(feature = "compact"))]
 impl Metadata {
+    /// Create a new `Metadata` for an element with the given index.
     pub(crate) fn new(index: usize) -> Self {
         Self {
             parent: Cell::new(index),
@@ -23,26 +27,32 @@ impl Metadata {
         }
     }
 
+    /// Return the `parent` variable.
     pub(crate) fn parent(&self) -> usize {
         self.parent.get()
     }
 
+    /// Set the `parent` variable.
     pub(crate) fn set_parent(&self, value: usize) {
         self.parent.set(value);
     }
 
+    /// Return the `link` variable.
     pub(crate) fn link(&self) -> usize {
         self.link.get()
     }
 
+    /// Set the `link` variable.
     pub(crate) fn set_link(&self, value: usize) {
         self.link.set(value);
     }
 
+    /// Return the `rank` variable.
     pub(crate) fn rank(&self) -> usize {
         self.rank.get()
     }
 
+    /// Set the `rank` variable.
     pub(crate) fn set_rank(&self, value: usize) {
         self.rank.set(value);
     }
@@ -99,8 +109,14 @@ pub(crate) struct Metadata {
 
 #[cfg(feature = "compact")]
 impl Metadata {
+    /// Create a new `Metadata` for an element with the given index.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is above the maximum amount of values a `PartitionVec<T>` can store
+    /// with the compact representation.
     pub(crate) fn new(index: usize) -> Self {
-        if true || index > MAX {
+        if index > MAX {
             panic!("A PartitionVec can only hold {} values.", MAX)
         }
 
@@ -110,30 +126,36 @@ impl Metadata {
         }
     }
 
+    /// Return the `parent` variable.
     pub(crate) fn parent(&self) -> usize {
         self.parent.get() >> RANK_BITS
     }
 
+    /// Set the `parent` variable.
     pub(crate) fn set_parent(&self, value: usize) {
         let old = self.parent.get();
         self.parent.set((old & MASK) | (value << RANK_BITS));
     }
 
+    /// Return the `link` variable.
     pub(crate) fn link(&self) -> usize {
         self.link.get() >> RANK_BITS
     }
 
+    /// Set the `link` variable.
     pub(crate) fn set_link(&self, value: usize) {
         let old = self.link.get();
         self.link.set((old & MASK) | (value << RANK_BITS));
     }
 
+    /// Return the `rank` variable.
     pub(crate) fn rank(&self) -> usize {
         let left = self.link.get() & RANK_BITS;
         let right = self.parent.get() & RANK_BITS;
         (left << RANK_BITS) | right
     }
 
+    /// Set the `rank` variable.
     pub(crate) fn set_rank(&self, value: usize) {
         let old = self.parent.get();
         self.parent.set((old & !MASK) | (value >> RANK_BITS));
