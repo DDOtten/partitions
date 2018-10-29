@@ -6,7 +6,7 @@ description = "A disjoint-sets/union-find implementation that allows for efficie
 license = "Apache-2.0"
 repository = "https://github.com/DDOtten/partitions.git"
 keywords = ["union-find", "disjoint-sets"]
-categories = ["algorithms", "data structures"]
+categories = ["algorithms", "data-structures"]
 readme = "README.md"
 documentation = "https://docs.rs/partitions"
 
