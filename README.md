@@ -4,8 +4,8 @@ A [disjoint-sets/union-find] implementation of a vector partitioned in sets that
 allows for efficient iteration over the elements of a set.
 
 [![Build Status](https://travis-ci.org/DDOtten/partitions.png?branch=master)](https://travis-ci.org/DDOtten/partitions)
-[![Latest version](https://img.shields.io/crates/v/libc.svg)](https://crates.io/crates/libc)
-[![Documentation](https://docs.rs/libc/badge.svg)](https://docs.rs/libc)
+[![Latest version](https://img.shields.io/crates/v/partitions.svg)](https://crates.io/crates/partitions)
+[![Documentation](https://docs.rs/partitions/badge.svg)](https://docs.rs/partitions)
 
 The main struct of this crate is [`PartitionVec<T>`] which has the functionality
 of a `Vec<T>` and in addition divides the elements of this vector in sets.
