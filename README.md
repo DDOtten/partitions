@@ -8,7 +8,7 @@ allows for efficient iteration over the elements of a set.
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/DDOtten/partitions.svg)](http://isitmaintained.com/project/DDOtten/partitions "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/DDOtten/partitions.svg)](http://isitmaintained.com/project/DDOtten/partitions "Percentage of issues still open")
 ![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
-[![Build Status](https://travis-ci.org/DDOtten/partitions.png?branch=master)](https://travis-ci.org/DDOtten/partitions)
+[![Build Status](https://travis-ci.org/DDOtten/partitions.svg?branch=master)](https://travis-ci.org/DDOtten/partitions)
 
 The main struct of this crate is [`PartitionVec<T>`] which has the functionality
 of a `Vec<T>` and in addition divides the elements of this vector in sets.

@@ -809,10 +809,10 @@ impl<T> PartitionVec<T> {
         let old_len = self.len();
         self.data.append(&mut other.data);
         self.meta.extend(other.meta.drain(..).map(|meta| {
-            let old = meta.parent();
-            meta.set_parent(old + old_len);
-            let old = meta.link();
-            meta.set_link(old + old_len);
+            let old_parent = meta.parent();
+            meta.set_parent(old_parent + old_len);
+            let old_link = meta.link();
+            meta.set_link(old_link + old_len);
 
             meta
         }));

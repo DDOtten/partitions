@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", warn(clippy::pedantic))]
+
 //! A [disjoint-sets/union-find] implementation of a vector partitioned in sets that allows
 //! for efficient iteration over elements of a set.
 //!
