@@ -4,13 +4,13 @@ A [disjoint-sets/union-find] implementation of a vector partitioned in sets that
 allows for efficient iteration over the elements of a set.
 
 The main struct of this crate is [`PartitionVec<T>`] which has the functionality
-of a `Vec<T>` and in addition devides the elements of this vector in sets.
+of a `Vec<T>` and in addition divides the elements of this vector in sets.
 The elements each start in their own set and sets can be joined with the
 [`union`] method.
 You can check if elements share a set with the [`same_set`] method and iterate
 on the elements in a set with the [`set`] method.
 The [`union`] and [`same_set`] methods are extremely fast and have an amortized
-complexity of `O(α(n))` where 'α' is the inverse Ackermann function and `n` is
+complexity of `O(α(n))` where `α` is the inverse Ackermann function and `n` is
 the length.
 This complexity is proven to be optimal and `α(n)` has value below 5 for any `n`
 that can be written in the observable universe.
