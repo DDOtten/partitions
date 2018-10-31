@@ -1,6 +1,6 @@
 [package]
 name = "partitions"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["DDOtten <daniel@otten.co>"]
 description = "A disjoint-sets/union-find implementation that allows for efficient iteration over elements of a set."
 license = "Apache-2.0"
