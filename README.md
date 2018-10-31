@@ -1,10 +1,10 @@
 # Partitions
 
-A [disjoint-sets/union-find] implementation of a vector partitioned in sets that
+A [disjoint-sets/union-find] implementation that
 allows for efficient iteration over the elements of a set.
 
 [![Latest version](https://img.shields.io/crates/v/partitions.svg)](https://crates.io/crates/partitions)
-[![Documentation](https://docs.rs/partitions/badge.svg)](https://docs.rs/partitions)
+[![Documentation](https://img.shields.io/badge/docs.rs-v0.2.4-blue.svg)](https://docs.rs/partitions)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/DDOtten/partitions.svg)](http://isitmaintained.com/project/DDOtten/partitions "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/DDOtten/partitions.svg)](http://isitmaintained.com/project/DDOtten/partitions "Percentage of issues still open")
 ![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
@@ -50,6 +50,8 @@ and then add the following to to your `lib.rs` or `main.rs`:
 ```rust
 extern crate partitions;
 ```
+
+This crate is [fully documented on docs.rs](https://docs.rs/partitions).
 
 ## License
 

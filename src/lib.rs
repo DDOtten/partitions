@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", warn(clippy::pedantic))]
-
 //! A [disjoint-sets/union-find] implementation of a vector partitioned in sets that allows
 //! for efficient iteration over elements of a set.
 //!
@@ -44,6 +42,8 @@
 //! [`same_set`]: partition_vec/struct.PartitionVec.html#method.same_set
 //! [`set`]: partition_vec/struct.PartitionVec.html#method.set
 //! [`make_singleton`]: partition_vec/struct.PartitionVec.html#method.make_singleton
+
+#![cfg_attr(feature = "cargo-clippy", warn(clippy::pedantic))]
 
 extern crate bit_vec;
 #[cfg(feature = "rayon")]
