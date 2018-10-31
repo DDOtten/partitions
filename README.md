@@ -3,9 +3,12 @@
 A [disjoint-sets/union-find] implementation of a vector partitioned in sets that
 allows for efficient iteration over the elements of a set.
 
-[![Build Status](https://travis-ci.org/DDOtten/partitions.png?branch=master)](https://travis-ci.org/DDOtten/partitions)
 [![Latest version](https://img.shields.io/crates/v/partitions.svg)](https://crates.io/crates/partitions)
 [![Documentation](https://docs.rs/partitions/badge.svg)](https://docs.rs/partitions)
+[![Build Status](https://travis-ci.org/DDOtten/partitions.png?branch=master)](https://travis-ci.org/DDOtten/partitions)
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/DDOtten/partitions.svg)](http://isitmaintained.com/project/DDOtten/partitions "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/DDOtten/partitions.svg)](http://isitmaintained.com/project/DDOtten/partitions "Percentage of issues still open")
+![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 
 The main struct of this crate is [`PartitionVec<T>`] which has the functionality
 of a `Vec<T>` and in addition divides the elements of this vector in sets.
@@ -25,18 +28,12 @@ unification.
 It is also a key component in implementing Kruskal's algorithm to find the
 minimum spanning tree of a graph.
 
-[disjoint-sets/union-find]:
-https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-[`PartitionVec<T>`]:
-https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html
-[`union`]:
-https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.union
-[`same_set`]:
-https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.same_set
-[`set`]:
-https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.set
-[`make_singleton`]:
-https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.make_singleton
+[disjoint-sets/union-find]: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+[`PartitionVec<T>`]: https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html
+[`union`]: https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.union
+[`same_set`]: https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.same_set
+[`set`]: https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.set
+[`make_singleton`]: https://docs.rs/partitions/0.2.0/partitions/partition_vec/struct.PartitionVec.html#method.make_singleton
 
 ## Using Partitions
 
