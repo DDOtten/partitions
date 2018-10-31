@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/{ORG-or-USERNAME}/{REPO-NAME}.png?branch=master)](https://travis-ci.org/{ORG-or-USERNAME}/{REPO-NAME})
+[![Build Status](https://travis-ci.org/DDOtten/partitions.png?branch=master)](https://travis-ci.org/DDOtten/partitions)
 
 # Partitions
 
