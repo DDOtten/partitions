@@ -19,7 +19,7 @@ bit-vec = { version = "0.5" }
 rayon = { version = "1.0", optional = true }
 
 [badges]
-travis-ci = { repository = "DDOtten/partitions", branch = "master" }
 is-it-maintained-issue-resolution = { repository = "DDOtten/partitions" }
 is-it-maintained-open-issues = { repository = "DDOtten/partitions" }
 maintenance = { status = "actively-developed" }
+travis-ci = { repository = "DDOtten/partitions", branch = "master" }
