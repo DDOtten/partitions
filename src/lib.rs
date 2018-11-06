@@ -89,6 +89,7 @@ macro_rules! bit_vec {
 
 mod metadata;
 pub mod partition_vec;
+pub mod partition_hash_map;
 
 pub use partition_vec::PartitionVec;
 

@@ -11,8 +11,10 @@ use {
             FusedIterator,
         },
     },
-    metadata::Metadata,
-    extend_mut,
+    crate::{
+        metadata::Metadata,
+        extend_mut,
+    },
 };
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
@@ -31,6 +33,8 @@ use rayon::prelude::*;
 /// This implementation chooses not to expose the `find` method and instead has a `same_set` method.
 /// This is so that the representative of the set stays an implementation detail which gives
 /// us more freedom to change it behind the scenes for improved performance.
+///
+/// # Examples
 ///
 /// ```
 /// # #[macro_use]
@@ -56,9 +60,9 @@ use rayon::prelude::*;
 pub struct PartitionVec<T> {
     /// Each index has a value.
     /// We store these in a separate `Vec` so we can easily dereference it to a slice.
-    data: Vec<T>,
+    pub(crate) data: Vec<T>,
     /// The metadata for each value, this vec will always have the same size as `values`.
-    meta: Vec<Metadata>,
+    pub(crate) meta: Vec<Metadata>,
 }
 
 /// Creates a [`PartitionVec`] containing the arguments.
@@ -551,7 +555,7 @@ impl<T> PartitionVec<T> {
     /// # Panics
     ///
     /// If `index` is out of bounds.
-    fn find(&self, index: usize) -> usize {
+    pub(crate) fn find(&self, index: usize) -> usize {
         // If the node is its own parent we have found the root.
         if self.meta[index].parent() == index {
             index
@@ -576,7 +580,7 @@ impl<T> PartitionVec<T> {
     ///
     /// If `index` is out of bounds.
     #[inline]
-    fn find_final(&self, mut index: usize) -> usize {
+    pub(crate) fn find_final(&self, mut index: usize) -> usize {
         while index != self.meta[index].parent() {
             index = self.meta[index].parent();
         }
@@ -1068,25 +1072,6 @@ impl<T> PartitionVec<T> {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
-    }
-
-    /// Converts the `PartitionVec<T>` into `Vec<T>`.
-    ///
-    /// This will not take the sets of the `PartitionVec<T>` in to account at all.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let mut partition_vec = partitions::PartitionVec::with_capacity(10);
-    /// partition_vec.extend([1, 2, 3].iter().cloned());
-    ///
-    /// assert!(partition_vec.capacity() == 10);
-    /// let slice = partition_vec.into_boxed_slice();
-    /// assert!(slice.into_vec().capacity() == 3);
-    /// ```
-    #[inline]
-    pub fn into_vec(self) -> Vec<T> {
-        self.data
     }
 
     /// Converts the `PartitionVec<T>` into `Box<[T]>`.

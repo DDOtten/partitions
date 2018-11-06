@@ -91,7 +91,7 @@ const RANK_BITS: usize = 4;
 #[cfg(feature = "compact")]
 const MASK: usize = (1 << RANK_BITS) - 1;
 #[cfg(feature = "compact")]
-const MAX: usize = 1 << (USIZE_BITS - RANK_BITS);
+const MAX: usize = (1 << (USIZE_BITS - RANK_BITS)) - 2;
 
 /// This provides additional information about a given value in the `DisjointSets`.
 ///
@@ -161,5 +161,20 @@ impl Metadata {
         self.parent.set((old & !MASK) | (value >> RANK_BITS));
         let old = self.link.get();
         self.link.set((old & !MASK) | (value & RANK_BITS));
+    }
+}
+
+impl Metadata {
+    pub(crate) unsafe fn is_marked(&self) -> bool {
+        self.parent.get() == !0
+    }
+
+    pub(crate) unsafe fn set_marked_value(&mut self, value: usize) {
+        self.parent.set(!0);
+        self.link.set(value);
+    }
+
+    pub(crate) unsafe fn marked_value(&self) -> usize {
+        self.link.get()
     }
 }
