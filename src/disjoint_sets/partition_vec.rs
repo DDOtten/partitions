@@ -1,6 +1,9 @@
 //! A [disjoint-sets/union-find] implementation of a vector partitioned in sets.
 //!
+//! See [`PartitionVec<T>`] for more information.
+//!
 //! [disjoint-sets/union-find]: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+//! [`PartitionVec<T>`]: struct.PartitionVec.html
 
 use {
     std::{
@@ -1671,7 +1674,7 @@ impl<'a, T> FusedIterator for SetMut<'a, T> {}
 /// An iterator over all sets in a `PartitionVec<T>`.
 ///
 /// This struct is created by the [`all_sets`] method on [`PartitionVec<T>`].
-/// See its documentation for more.
+/// See its documentation for more information.
 ///
 /// [`all_sets`]: struct.PartitionVec.html#method.all_sets
 /// [`PartitionVec<T>`]: struct.PartitionVec.html
@@ -1731,7 +1734,7 @@ impl<'a, T> FusedIterator for AllSets<'a, T> {}
 /// An iterator over all sets in a `PartitionVec<T>` that allows mutating elements.
 ///
 /// This struct is created by the [`all_sets`] method on [`PartitionVec<T>`].
-/// See its documentation for more.
+/// See its documentation for more information.
 ///
 /// [`all_sets`]: struct.PartitionVec.html#method.all_sets
 /// [`PartitionVec<T>`]: struct.PartitionVec.html
