@@ -92,6 +92,7 @@ pub mod partition_vec;
 pub mod partition_hash_map;
 
 pub use partition_vec::PartitionVec;
+pub use partition_hash_map::PartitionHashMap;
 
 /// This takes an mutable reference and return a mutable reference with a different lifetime.
 ///
