@@ -326,7 +326,7 @@ macro_rules! partition_map {
         }
 
         #[derive(Clone)]
-        pub struct Keys<'a, K, V> {
+        pub struct Keys<'a, K: 'a, V: 'a> {
             iter: $map_mod::Keys<'a, K, usize>,
             phantom: std::marker::PhantomData<&'a V>,
         }
@@ -355,7 +355,7 @@ macro_rules! partition_map {
         impl<'a, K, V> FusedIterator for Keys<'a, K, V> {}
 
         #[derive(Clone)]
-        pub struct Values<'a, K, V> {
+        pub struct Values<'a, K: 'a, V: 'a> {
             iter: $map_mod::Values<'a, K, usize>,
             vec: &'a PartitionVec<V>,
         }
@@ -383,7 +383,7 @@ macro_rules! partition_map {
 
         impl<'a, K, V> FusedIterator for Values<'a, K, V> {}
 
-        pub struct ValuesMut<'a, K, V> {
+        pub struct ValuesMut<'a, K: 'a, V: 'a> {
             iter: $map_mod::Values<'a, K, usize>,
             vec: &'a mut PartitionVec<V>,
         }
@@ -452,7 +452,7 @@ macro_rules! partition_map {
         }
 
         #[derive(Clone)]
-        pub struct Iter<'a, K, V> {
+        pub struct Iter<'a, K: 'a, V: 'a> {
             iter: $map_mod::Iter<'a, K, usize>,
             vec: &'a PartitionVec<V>,
         }
@@ -481,7 +481,7 @@ macro_rules! partition_map {
 
         impl<'a, K, V> FusedIterator for Iter<'a, K, V> {}
 
-        pub struct IterMut<'a, K, V> {
+        pub struct IterMut<'a, K: 'a, V: 'a> {
             iter: $map_mod::Iter<'a, K, usize>,
             vec: &'a mut PartitionVec<V>,
         }
@@ -640,7 +640,7 @@ pub mod partition_btree_map {
     }
 
     #[derive(Clone)]
-    pub struct Range<'a, K, V> {
+    pub struct Range<'a, K: 'a, V: 'a> {
         iter: btree_map::Range<'a, K, usize>,
         vec: &'a PartitionVec<V>,
     }
@@ -667,7 +667,7 @@ pub mod partition_btree_map {
 
     impl<'a, K, V> FusedIterator for Range<'a, K, V> {}
 
-    pub struct RangeMut<'a, K, V> {
+    pub struct RangeMut<'a, K: 'a, V: 'a> {
         iter: btree_map::Range<'a, K, usize>,
         vec: &'a mut PartitionVec<V>,
     }
