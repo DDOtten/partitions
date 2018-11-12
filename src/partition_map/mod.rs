@@ -99,15 +99,23 @@ macro_rules! partition_map {
 
             pub fn clear(&mut self) {
                 self.map.clear();
+                self.vec.lazy_clear();
+            }
 
-                unsafe {
-                    for i in 0 .. self.vec.len() {
-                        if !self.vec.meta[i].is_marked() {
-                            drop(std::ptr::read(&self.vec.data[i]));
-                        }
-                    }
-                    self.vec.data.set_len(0);
-                    self.vec.meta.set_len(0);
+            pub fn entry(&mut self, key: K) -> Entry<K, V> {
+                let entry = self.map.entry(key);
+
+                match entry {
+                    $map_mod::Entry::Occupied(occupied) => Entry::Occupied(OccupiedEntry {
+                        entry: occupied,
+                        vec: &mut self.vec,
+                        last_removed: &mut self.last_removed,
+                    }),
+                    $map_mod::Entry::Vacant(vacant) => Entry::Vacant(VacantEntry {
+                        entry: vacant,
+                        vec: &mut self.vec,
+                        last_removed: &mut self.last_removed,
+                    })
                 }
             }
 
@@ -145,7 +153,7 @@ macro_rules! partition_map {
                     } else {
                         let index = self.last_removed;
                         self.map.insert(key, index);
-                        unsafe { self.vec_lazy_insert(index, value) };
+                        unsafe { self.last_removed = self.vec.lazy_insert(index, value) };
                     }
                     None
                 }
@@ -157,7 +165,9 @@ macro_rules! partition_map {
             {
                 let index = self.map.remove(key)?;
 
-                unsafe { Some(self.vec_lazy_remove(index)) }
+                let last_removed = self.last_removed;
+                self.last_removed = index;
+                unsafe { Some(self.vec.lazy_remove(index, last_removed)) }
             }
 
             pub fn keys(&self) -> Keys<K, V> {
@@ -193,24 +203,6 @@ macro_rules! partition_map {
                     iter: self.map.iter(),
                     vec: &mut self.vec,
                 }
-            }
-
-            pub(crate) unsafe fn vec_lazy_insert(&mut self, index: usize, value: V) {
-                self.last_removed = self.vec.meta[index].marked_value();
-
-                std::ptr::write(&mut self.vec.data[index], value);
-                self.vec.meta[index] = crate::metadata::Metadata::new(index);
-            }
-
-            pub(crate) unsafe fn vec_lazy_remove(&mut self, index: usize) -> V {
-                self.vec.make_singleton(index);
-
-                let value = std::ptr::read(&self.vec.data[index]);
-                self.vec.meta[index].set_marked_value(self.last_removed);
-
-                self.last_removed = index;
-
-                value
             }
         }
 
@@ -313,15 +305,131 @@ macro_rules! partition_map {
 
         impl<K, V$(, $generic)*> Drop for $struct<K, V$(, $generic)*> {
             fn drop(&mut self) {
-                unsafe {
-                    for i in 0 .. self.vec.len() {
-                        if !self.vec.meta[i].is_marked() {
-                            drop(std::ptr::read(&self.vec.data[i]));
-                        }
-                    }
-                    self.vec.data.set_len(0);
-                    self.vec.meta.set_len(0);
+                self.vec.lazy_clear();
+            }
+        }
+
+        pub enum Entry<'a, K: 'a, V: 'a> {
+            Vacant(VacantEntry<'a, K, V>),
+            Occupied(OccupiedEntry<'a, K, V>),
+        }
+
+        impl<'a, K, V> fmt::Debug for Entry<'a, K, V> where
+            K: $($key_bounds)*+ fmt::Debug,
+            V: fmt::Debug,
+        {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                match self {
+                    Entry::Occupied(occupied) => f.debug_tuple("Entry")
+                        .field(occupied)
+                        .finish(),
+                    Entry::Vacant(vacant) => f.debug_tuple("Entry")
+                        .field(vacant)
+                        .finish(),
                 }
+            }
+        }
+
+        pub struct VacantEntry<'a, K: 'a, V: 'a> {
+            entry: $map_mod::VacantEntry<'a, K, usize>,
+            vec: &'a mut PartitionVec<V>,
+            last_removed: &'a mut usize,
+        }
+
+        impl<'a, K, V> VacantEntry<'a, K, V> where
+            K: $($key_bounds)*,
+        {
+            pub fn key(&self) -> &K {
+                self.entry.key()
+            }
+
+            pub fn into_key(self) -> K {
+                self.entry.into_key()
+            }
+
+            pub fn insert(self, value: V) -> &'a mut V {
+                if *self.last_removed == !0 {
+                    self.entry.insert(self.vec.len());
+                    self.vec.push(value);
+                    self.vec.last_mut().unwrap()
+                } else {
+                    let index = *self.last_removed;
+                    self.entry.insert(index);
+                    unsafe { *self.last_removed = self.vec.lazy_insert(index, value) };
+                    &mut self.vec[index]
+                }
+            }
+        }
+
+        impl<'a, K, V> fmt::Debug for VacantEntry<'a, K, V> where
+            K: $($key_bounds)* + fmt::Debug,
+        {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.debug_struct("VacantEntry")
+                    .field("key", self.key())
+                    .finish()
+            }
+        }
+
+        pub struct OccupiedEntry<'a, K: 'a, V: 'a> {
+            entry: $map_mod::OccupiedEntry<'a, K, usize>,
+            vec: &'a mut PartitionVec<V>,
+            last_removed: &'a mut usize,
+        }
+
+        impl<'a, K, V> OccupiedEntry<'a, K, V> where
+            K: $($key_bounds)*,
+        {
+            pub fn key(&self) -> &K {
+                self.entry.key()
+            }
+
+            pub fn get(&self) -> &V {
+                let index = *self.entry.get();
+                &self.vec[index]
+            }
+
+            pub fn get_mut(&mut self) -> &mut V {
+                let index = *self.entry.get();
+                &mut self.vec[index]
+            }
+
+            pub fn into_mut(self) -> &'a mut V {
+                let index = *self.entry.get();
+                &mut self.vec[index]
+            }
+
+            pub fn insert(&mut self, mut value: V) -> V {
+                std::mem::swap(self.get_mut(), &mut value);
+                value
+            }
+
+            pub fn remove(self) -> V {
+                let index = self.entry.remove();
+
+                let last_removed = *self.last_removed;
+                *self.last_removed = index;
+                unsafe { self.vec.lazy_remove(index, last_removed) }
+            }
+
+            pub fn remove_entry(self) -> (K, V) {
+                let (key, index) = self.entry.remove_entry();
+
+                let last_removed = *self.last_removed;
+                *self.last_removed = index;
+                unsafe { (key, self.vec.lazy_remove(index, last_removed)) }
+            }
+        }
+
+        impl<'a, K, V> fmt::Debug for OccupiedEntry<'a, K, V> where
+            K: $($key_bounds)* + fmt::Debug,
+            V: fmt::Debug,
+        {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.debug_struct("OccupiedEntry")
+                    .field("key", self.key())
+                    .field("value", self.get())
+                    .finish()
             }
         }
 
@@ -444,10 +552,7 @@ macro_rules! partition_map {
             fn drop(&mut self) {
                 while let Some(_) = self.next() {}
 
-                unsafe {
-                    self.vec.data.set_len(0);
-                    self.vec.meta.set_len(0);
-                }
+                unsafe { self.vec.set_len(0); }
             }
         }
 
@@ -512,185 +617,5 @@ macro_rules! partition_map {
     };
 }
 
-/// This is a mod.
-pub mod partition_hash_map {
-    use {
-        std::{
-            ops,
-            borrow::Borrow,
-            iter::FusedIterator,
-            hash::{Hash, BuildHasher},
-            collections::hash_map::{self, HashMap, RandomState},
-        },
-        crate::PartitionVec,
-    };
-
-    partition_map![
-        /// This is a `PartitionHashMap`.
-        PartitionHashMap<K, V, S: BuildHasher = RandomState>
-        hash_map
-        HashMap
-        Eq + Hash
-    ];
-
-    impl<K, V> PartitionHashMap<K, V, std::collections::hash_map::RandomState> where
-        K: Eq + Hash,
-    {
-        pub fn with_capacity(capacity: usize) -> Self {
-            Self {
-                map: std::collections::HashMap::with_capacity(capacity),
-                vec: PartitionVec::with_capacity(capacity),
-                last_removed: !0,
-            }
-        }
-    }
-
-    impl<K, V, S> PartitionHashMap<K, V, S> where
-        K: Eq + Hash,
-        S: BuildHasher,
-    {
-        pub fn with_hasher(hash_builder: S) -> Self {
-            Self {
-                map: std::collections::HashMap::with_hasher(hash_builder),
-                vec: PartitionVec::new(),
-                last_removed: !0,
-            }
-        }
-
-        pub fn with_capacity_and_hasher(capacity: usize, hash_builder: S) -> Self {
-            Self {
-                map: std::collections::HashMap::with_capacity_and_hasher(capacity, hash_builder),
-                vec: PartitionVec::with_capacity(capacity),
-                last_removed: !0,
-            }
-        }
-
-        pub fn capacity(&self) -> usize {
-            usize::min(self.map.capacity(), self.vec.capacity())
-        }
-
-        pub fn reserve(&mut self, additional: usize) {
-            self.map.reserve(additional);
-            self.vec.reserve(additional);
-        }
-
-        pub fn shrink_to_fit(&mut self) {
-            self.map.shrink_to_fit();
-            self.vec.shrink_to_fit();
-        }
-
-        pub fn hasher(&self) -> &S {
-            self.map.hasher()
-        }
-
-        pub fn remove_entry<Q>(&mut self, key: &Q) -> Option<(K, V)> where
-            K: Borrow<Q>,
-            Q: Eq + Hash + ?Sized,
-        {
-            let (key, index) = self.map.remove_entry(key)?;
-
-            unsafe { Some((key, self.vec_lazy_remove(index))) }
-        }
-    }
-}
-
-pub mod partition_btree_map {
-    use {
-        std::{
-            ops,
-            borrow::Borrow,
-            iter::FusedIterator,
-            collections::btree_map::{self, BTreeMap},
-        },
-        crate::PartitionVec,
-    };
-
-    partition_map![
-        /// This is a `PartitionBTreeMap`.
-        PartitionBTreeMap<K, V>
-        btree_map
-        BTreeMap
-        Ord
-    ];
-
-    impl<K, V> PartitionBTreeMap<K, V> where
-        K: Ord,
-    {
-        pub fn range<Q, R>(&self, range: R) -> impl Iterator<Item = (&K, &V)> where
-            K: Borrow<Q>,
-            R: ops::RangeBounds<Q>,
-            Q: Ord + ?Sized,
-        {
-            let vec = &self.vec;
-            self.map.range(range).map(move |(key, &index)|
-                (key, &vec[index])
-            )
-        }
-
-        pub fn range_mut<Q, R>(&mut self, range: R) -> impl Iterator<Item = (&K, &mut V)> where
-            K: Borrow<Q>,
-            R: ops::RangeBounds<Q>,
-            Q: Ord + ?Sized,
-        {
-            let vec = &mut self.vec;
-            self.map.range(range).map(move |(key, &index)|
-                (key, unsafe { crate::extend_mut(&mut vec[index]) })
-            )
-        }
-    }
-
-    #[derive(Clone)]
-    pub struct Range<'a, K: 'a, V: 'a> {
-        iter: btree_map::Range<'a, K, usize>,
-        vec: &'a PartitionVec<V>,
-    }
-
-    impl<'a, K, V> Iterator for Range<'a, K, V> {
-        type Item = (&'a K, &'a V);
-
-        #[inline]
-        fn next(&mut self) -> Option<(&'a K, &'a V)> {
-            let (key, &index) = self.iter.next()?;
-
-            Some((key, &self.vec[index]))
-        }
-    }
-
-    impl<'a, K, V> DoubleEndedIterator for Range<'a, K, V> {
-        #[inline]
-        fn next_back(&mut self) -> Option<(&'a K, &'a V)> {
-            let (key, &index) = self.iter.next_back()?;
-
-            Some((key, &self.vec[index]))
-        }
-    }
-
-    impl<'a, K, V> FusedIterator for Range<'a, K, V> {}
-
-    pub struct RangeMut<'a, K: 'a, V: 'a> {
-        iter: btree_map::Range<'a, K, usize>,
-        vec: &'a mut PartitionVec<V>,
-    }
-
-    impl<'a, K, V> Iterator for RangeMut<'a, K, V> {
-        type Item = (&'a K, &'a mut V);
-
-        #[inline]
-        fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
-            let (key, &index) = self.iter.next()?;
-
-            unsafe { Some((key, crate::extend_mut(&mut self.vec[index]))) }
-        }
-    }
-
-    impl<'a, K, V> DoubleEndedIterator for RangeMut<'a, K, V> {
-        #[inline]
-        fn next_back(&mut self) -> Option<(&'a K, &'a mut V)> {
-            let (key, &index) = self.iter.next_back()?;
-
-            unsafe { Some((key, crate::extend_mut(&mut self.vec[index]))) }
-        }
-    }
-
-    impl<'a, K, V> FusedIterator for RangeMut<'a, K, V> {}
-}
+pub mod partition_hash_map;
+pub mod partition_btree_map;

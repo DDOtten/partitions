@@ -46,8 +46,13 @@
 #![cfg_attr(feature = "cargo-clippy", warn(clippy::pedantic))]
 
 extern crate bit_vec;
+
 #[cfg(feature = "rayon")]
 extern crate rayon;
+
+#[cfg(feature = "proptest")]
+#[macro_use]
+extern crate proptest;
 
 /// We count the amount of expresions given to this macro.
 #[doc(hidden)]
@@ -87,7 +92,6 @@ macro_rules! bit_vec {
     };
 }
 
-mod metadata;
 mod disjoint_sets;
 mod partition_map;
 

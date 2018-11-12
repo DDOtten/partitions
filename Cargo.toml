@@ -11,12 +11,13 @@ readme = "README.md"
 documentation = "https://docs.rs/partitions"
 
 [features]
-default = ["rayon"]
+default = ["rayon", "proptest"]
 compact = []
 
 [dependencies]
 bit-vec = { version = "0.5" }
 rayon = { version = "1.0", optional = true }
+proptest = { version = "0.8", optional = true }
 
 [badges]
 is-it-maintained-issue-resolution = { repository = "DDOtten/partitions" }

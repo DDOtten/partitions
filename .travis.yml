@@ -9,6 +9,8 @@ before_script:
 script:
   - cargo build
   - cargo test
+  - cargo build --all-features
+  - cargo test --all-features
 matrix:
   allow_failures:
     rust:

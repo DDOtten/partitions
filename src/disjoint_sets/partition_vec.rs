@@ -15,12 +15,14 @@ use {
         },
     },
     crate::{
-        metadata::Metadata,
+        disjoint_sets::metadata::Metadata,
         extend_mut,
     },
 };
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
+#[cfg(feature = "proptest")]
+use proptest::prelude::*;
 
 /// A [disjoint-sets/union-find] implementation of a vector partitioned in sets.
 ///
@@ -63,9 +65,9 @@ use rayon::prelude::*;
 pub struct PartitionVec<T> {
     /// Each index has a value.
     /// We store these in a separate `Vec` so we can easily dereference it to a slice.
-    pub(crate) data: Vec<T>,
+    data: Vec<T>,
     /// The metadata for each value, this vec will always have the same size as `values`.
-    pub(crate) meta: Vec<Metadata>,
+    meta: Vec<Metadata>,
 }
 
 /// Creates a [`PartitionVec`] containing the arguments.
@@ -1344,6 +1346,45 @@ impl<T> PartitionVec<T> {
             meta: (0 .. len).map(Metadata::new).collect(),
         }
     }
+
+    pub(crate) unsafe fn set_len(&mut self, len: usize) {
+        self.data.set_len(len);
+        self.meta.set_len(len);
+    }
+
+    #[inline]
+    pub(crate) unsafe fn lazy_insert(&mut self, index: usize, value: T) -> usize {
+        let marked_value = self.meta[index].marked_value();
+
+        std::ptr::write(&mut self.data[index], value);
+        self.meta[index] = Metadata::new(index);
+
+        marked_value
+    }
+
+    #[inline]
+    pub(crate) unsafe fn lazy_remove(&mut self, index: usize, marked_value: usize) -> T {
+        self.make_singleton(index);
+
+        let value = std::ptr::read(&self.data[index]);
+        self.meta[index].set_marked_value(marked_value);
+
+        value
+    }
+
+    #[inline]
+    pub(crate) fn lazy_clear(&mut self) {
+        for i in 0 .. self.len() {
+            if !self.meta[i].is_marked() {
+                unsafe { drop(std::ptr::read(&self.data[i])); }
+            }
+        }
+
+        unsafe {
+            self.data.set_len(0);
+            self.meta.set_len(0);
+        }
+    }
 }
 
 impl<T> Default for PartitionVec<T> {
@@ -1590,6 +1631,46 @@ impl<T> ParallelExtend<T> for PartitionVec<T> where T: Send {
 impl<'a, T> ParallelExtend<&'a T> for PartitionVec<T> where T: Copy + Send + Sync + 'a {
     fn par_extend<I>(&mut self, par_iter: I) where I: IntoParallelIterator<Item = &'a T> {
         self.par_extend(par_iter.into_par_iter().cloned())
+    }
+}
+
+#[cfg(feature = "proptest")]
+impl<T> Arbitrary for PartitionVec<T> where
+    T: Arbitrary,
+    T::Strategy: 'static,
+{
+    type Parameters = (proptest::collection::SizeRange, T::Parameters);
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(params: Self::Parameters) -> Self::Strategy {
+        use std::collections::hash_map;
+
+        let (size_range, params) = params;
+        let params = (size_range, (params, ()));
+
+        (Vec::<(T, usize)>::arbitrary_with(params)).prop_map(|vec| {
+            let mut partition_vec = Self::with_capacity(vec.len());
+
+            // We map a `set_number` to an `index` of that set.
+            let mut map = hash_map::HashMap::with_capacity(vec.len());
+
+            for (index, (value, mut set_number)) in vec.into_iter().enumerate() {
+                partition_vec.push(value);
+
+                let set_number = set_number.trailing_zeros();
+
+                match map.entry(set_number) {
+                    hash_map::Entry::Occupied(occupied) => {
+                        partition_vec.union(index, *occupied.get());
+                    },
+                    hash_map::Entry::Vacant(vacant) => {
+                        vacant.insert(index);
+                    }
+                }
+            }
+
+            partition_vec
+        }).boxed()
     }
 }
 

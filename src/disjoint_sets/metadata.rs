@@ -165,7 +165,7 @@ impl Metadata {
 }
 
 impl Metadata {
-    pub(crate) unsafe fn is_marked(&self) -> bool {
+    pub(crate) fn is_marked(&self) -> bool {
         self.parent.get() == !0
     }
 
