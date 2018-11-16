@@ -1,13 +1,6 @@
-use {
-    std::{
-        ops,
-        fmt,
-        borrow::Borrow,
-        iter::FusedIterator,
-        hash::{Hash, BuildHasher},
-        collections::hash_map::{self, HashMap, RandomState},
-    },
-    crate::PartitionVec,
+use std::{
+    hash::{Hash, BuildHasher},
+    collections::hash_map::{self, HashMap, RandomState},
 };
 
 partition_map![
@@ -66,16 +59,5 @@ impl<K, V, S> PartitionHashMap<K, V, S> where
 
     pub fn hasher(&self) -> &S {
         self.map.hasher()
-    }
-
-    pub fn remove_entry<Q>(&mut self, key: &Q) -> Option<(K, V)> where
-        K: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
-    {
-        let (key, index) = self.map.remove_entry(key)?;
-
-        let last_removed = self.last_removed;
-        self.last_removed = index;
-        unsafe { Some((key, self.vec.lazy_remove(index, last_removed))) }
     }
 }

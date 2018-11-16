@@ -43,6 +43,7 @@
 //! [`set`]: partition_vec/struct.PartitionVec.html#method.set
 //! [`make_singleton`]: partition_vec/struct.PartitionVec.html#method.make_singleton
 
+//#![warn(missing_docs)]
 #![cfg_attr(feature = "cargo-clippy", warn(clippy::pedantic))]
 
 extern crate bit_vec;
@@ -51,7 +52,6 @@ extern crate bit_vec;
 extern crate rayon;
 
 #[cfg(feature = "proptest")]
-#[macro_use]
 extern crate proptest;
 
 /// We count the amount of expresions given to this macro.
@@ -105,6 +105,6 @@ pub use partition_map::partition_btree_map::{self, PartitionBTreeMap};
 /// comment explaining why it is necessary.
 /// The main motivation for making a function for this is that the code is not
 /// intuitive and this makes the intend clearer.
-unsafe fn extend_mut<'a, 'b, T>(ptr: &'a mut T) -> &'b mut T {
+unsafe fn extend_mut<'a, 'b, T: ?Sized>(ptr: &'a mut T) -> &'b mut T {
     &mut *(ptr as *mut T)
 }

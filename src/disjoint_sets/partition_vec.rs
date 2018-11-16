@@ -66,7 +66,7 @@ pub struct PartitionVec<T> {
     /// Each index has a value.
     /// We store these in a separate `Vec` so we can easily dereference it to a slice.
     data: Vec<T>,
-    /// The metadata for each value, this vec will always have the same size as `values`.
+    /// The metadata for each value, this `Vec` will always have the same size as `values`.
     meta: Vec<Metadata>,
 }
 
@@ -1352,8 +1352,7 @@ impl<T> PartitionVec<T> {
         self.meta.set_len(len);
     }
 
-    #[inline]
-    pub(crate) unsafe fn lazy_insert(&mut self, index: usize, value: T) -> usize {
+    pub(crate) unsafe fn insert_over_lazy_removed(&mut self, index: usize, value: T) -> usize {
         let marked_value = self.meta[index].marked_value();
 
         std::ptr::write(&mut self.data[index], value);
@@ -1362,7 +1361,6 @@ impl<T> PartitionVec<T> {
         marked_value
     }
 
-    #[inline]
     pub(crate) unsafe fn lazy_remove(&mut self, index: usize, marked_value: usize) -> T {
         self.make_singleton(index);
 
@@ -1372,8 +1370,7 @@ impl<T> PartitionVec<T> {
         value
     }
 
-    #[inline]
-    pub(crate) fn lazy_clear(&mut self) {
+    pub(crate) fn clear_lazy_removed(&mut self) {
         for i in 0 .. self.len() {
             if !self.meta[i].is_marked() {
                 unsafe { drop(std::ptr::read(&self.data[i])); }
@@ -1381,9 +1378,18 @@ impl<T> PartitionVec<T> {
         }
 
         unsafe {
-            self.data.set_len(0);
-            self.meta.set_len(0);
+            self.set_len(0);
         }
+    }
+
+    pub(crate) unsafe fn push_lazy_removed(&mut self) {
+        let index = self.len();
+
+        self.reserve(1);
+        self.set_len(index + 1);
+
+        self.meta[index] = Metadata::new(0);
+        self.meta[index].set_marked_value(!0);
     }
 }
 
