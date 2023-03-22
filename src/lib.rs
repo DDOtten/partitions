@@ -73,7 +73,7 @@ macro_rules! partitions_count_expr {
 /// A convenient macro to create a `BitVec` similar to `vec!`.
 macro_rules! bit_vec {
     ($element: expr; $len: expr) => {
-        bit_vec::BitVec::from_elem($len, $element);
+        bit_vec::BitVec::from_elem($len, $element)
     };
     ($($value: expr),*) => {
         {
