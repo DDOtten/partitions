@@ -96,8 +96,8 @@ mod disjoint_sets;
 mod partition_map;
 
 pub use disjoint_sets::partition_vec::{self, PartitionVec};
-pub use partition_map::partition_hash_map::{self, PartitionHashMap};
 pub use partition_map::partition_btree_map::{self, PartitionBTreeMap};
+pub use partition_map::partition_hash_map::{self, PartitionHashMap};
 
 /// This takes an mutable reference and return a mutable reference with a different lifetime.
 ///
