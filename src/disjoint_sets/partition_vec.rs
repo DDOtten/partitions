@@ -5,24 +5,18 @@
 //! [disjoint-sets/union-find]: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
 //! [`PartitionVec<T>`]: struct.PartitionVec.html
 
-use {
-    std::{
-        ops,
-        cmp::Ordering,
-        iter::{
-            FromIterator,
-            FusedIterator,
-        },
-    },
-    crate::{
-        disjoint_sets::metadata::Metadata,
-        extend_mut,
-    },
-};
-#[cfg(feature = "rayon")]
-use rayon::prelude::*;
 #[cfg(feature = "proptest")]
 use proptest::prelude::*;
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
+use {
+    crate::{disjoint_sets::metadata::Metadata, extend_mut},
+    std::{
+        cmp::Ordering,
+        iter::{FromIterator, FusedIterator},
+        ops,
+    },
+};
 
 /// A [disjoint-sets/union-find] implementation of a vector partitioned in sets.
 ///
@@ -205,6 +199,7 @@ impl<T> PartitionVec<T> {
     /// let mut partition_vec: PartitionVec<()> = PartitionVec::new();
     /// ```
     #[inline]
+    #[must_use]
     pub fn new() -> Self {
         Self {
             data: Vec::new(),
@@ -216,7 +211,7 @@ impl<T> PartitionVec<T> {
     ///
     /// The `PartitionVec<T>` will be able to hold exactly `capacity`
     /// elements without reallocating.
-    /// If capacity is 0, the partition_vec will not allocate.
+    /// If capacity is 0, the `partition_vec` will not allocate.
     ///
     /// # Examples
     ///
@@ -237,6 +232,7 @@ impl<T> PartitionVec<T> {
     /// partition_vec.push(11);
     /// ```
     #[inline]
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             data: Vec::with_capacity(capacity),
@@ -291,7 +287,7 @@ impl<T> PartitionVec<T> {
         let j = self.find(second_index);
 
         if i == j {
-            return
+            return;
         }
 
         // We swap the values of the links.
@@ -304,16 +300,16 @@ impl<T> PartitionVec<T> {
         match Ord::cmp(&self.meta[i].rank(), &self.meta[j].rank()) {
             Ordering::Less => {
                 self.meta[i].set_parent(j);
-            },
+            }
             Ordering::Equal => {
                 // We add the first tree to the second tree.
                 self.meta[i].set_parent(j);
                 // The second tree becomes larger.
                 self.meta[j].set_rank(self.meta[j].rank() + 1);
-            },
+            }
             Ordering::Greater => {
                 self.meta[j].set_parent(i);
-            },
+            }
         }
     }
 
@@ -346,6 +342,7 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
+    #[must_use]
     pub fn same_set(&self, first_index: usize, second_index: usize) -> bool {
         self.find(first_index) == self.find(second_index)
     }
@@ -379,6 +376,7 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
+    #[must_use]
     pub fn other_sets(&self, first_index: usize, second_index: usize) -> bool {
         self.find(first_index) != self.find(second_index)
     }
@@ -467,6 +465,7 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
+    #[must_use]
     pub fn is_singleton(&self, index: usize) -> bool {
         self.meta[index].link() == index
     }
@@ -499,6 +498,7 @@ impl<T> PartitionVec<T> {
     /// assert!(partition_vec.len_of_set(2) == 2);
     /// # }
     /// ```
+    #[must_use]
     pub fn len_of_set(&self, index: usize) -> usize {
         let mut current = self.meta[index].link();
         let mut count = 1;
@@ -533,11 +533,12 @@ impl<T> PartitionVec<T> {
     /// assert!(partition_vec.amount_of_sets() == 3);
     /// # }
     /// ```
+    #[must_use]
     pub fn amount_of_sets(&self) -> usize {
         let mut done = bit_vec![false; self.len()];
         let mut count = 0;
 
-        for i in 0 .. self.len() {
+        for i in 0..self.len() {
             if !done.get(self.find(i)).unwrap() {
                 done.set(self.find(i), true);
                 count += 1;
@@ -611,6 +612,7 @@ impl<T> PartitionVec<T> {
     /// assert!(partition_vec.capacity() >= 7);
     /// ```
     #[inline]
+    #[must_use]
     pub fn capacity(&self) -> usize {
         usize::min(self.data.capacity(), self.meta.capacity())
     }
@@ -715,7 +717,7 @@ impl<T> PartitionVec<T> {
     /// ```
     pub fn insert(&mut self, index: usize, elem: T) {
         // We update the parents and links above the new value.
-        for i in 0 .. self.meta.len() {
+        for i in 0..self.meta.len() {
             let parent = self.meta[i].parent();
             if parent >= index {
                 self.meta[i].set_parent(parent + 1);
@@ -766,7 +768,7 @@ impl<T> PartitionVec<T> {
         self.meta.remove(index);
 
         // We lower all values that point above the index.
-        for i in 0 .. self.meta.len() {
+        for i in 0..self.meta.len() {
             let parent = self.meta[i].parent();
             if parent > index {
                 self.meta[i].set_parent(parent - 1);
@@ -947,10 +949,10 @@ impl<T> PartitionVec<T> {
     /// ```
     pub fn truncate(&mut self, new_len: usize) {
         if new_len >= self.len() {
-            return
+            return;
         }
 
-        for i in 0 .. new_len {
+        for i in 0..new_len {
             let parent = self.meta[i].parent();
             let mut current = self.meta[i].link();
             if parent >= new_len {
@@ -1028,14 +1030,17 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
-    pub fn resize(&mut self, new_len: usize, value: T) where T: Clone {
+    pub fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
         let len = self.len();
         match Ord::cmp(&new_len, &len) {
             Ordering::Less => self.truncate(new_len),
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             Ordering::Greater => {
                 self.data.append(&mut vec![value; new_len - len]);
-                self.meta.extend((len .. new_len).map(Metadata::new));
+                self.meta.extend((len..new_len).map(Metadata::new));
             }
         }
     }
@@ -1063,7 +1068,7 @@ impl<T> PartitionVec<T> {
         self.meta.clear();
     }
 
-    /// Returns `true` if the partition_vec contains no elements.
+    /// Returns `true` if the `partition_vec` contains no elements.
     ///
     /// # Examples
     ///
@@ -1075,6 +1080,7 @@ impl<T> PartitionVec<T> {
     /// assert!(!partition_vec.is_empty());
     /// ```
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -1095,6 +1101,7 @@ impl<T> PartitionVec<T> {
     /// assert!(slice.into_vec().capacity() == 3);
     /// ```
     #[inline]
+    #[must_use]
     pub fn into_boxed_slice(self) -> Box<[T]> {
         self.data.into_boxed_slice()
     }
@@ -1117,7 +1124,8 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
-    pub fn as_slice(&self) -> & [T] {
+    #[must_use]
+    pub fn as_slice(&self) -> &[T] {
         self.data.as_slice()
     }
 
@@ -1185,6 +1193,7 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
+    #[must_use]
     pub fn set(&self, index: usize) -> Set<T> {
         let root = self.find_final(index);
 
@@ -1279,13 +1288,14 @@ impl<T> PartitionVec<T> {
     /// # }
     /// ```
     #[inline]
+    #[must_use]
     pub fn all_sets(&self) -> AllSets<T> {
         let len = self.len();
 
         AllSets {
             partition_vec: self,
             done: bit_vec![false; len],
-            range: 0 .. len,
+            range: 0..len,
         }
     }
 
@@ -1333,17 +1343,20 @@ impl<T> PartitionVec<T> {
         AllSetsMut {
             partition_vec: self,
             done: bit_vec![false; len],
-            range: 0 .. len,
+            range: 0..len,
         }
     }
 
     /// This method is used by the `partition_vec!` macro.
     #[doc(hidden)]
     #[inline]
-    pub fn from_elem(elem: T, len: usize) -> Self where T: Clone {
+    pub fn from_elem(elem: T, len: usize) -> Self
+    where
+        T: Clone,
+    {
         Self {
             data: vec![elem; len],
-            meta: (0 .. len).map(Metadata::new).collect(),
+            meta: (0..len).map(Metadata::new).collect(),
         }
     }
 
@@ -1371,9 +1384,11 @@ impl<T> PartitionVec<T> {
     }
 
     pub(crate) fn clear_lazy_removed(&mut self) {
-        for i in 0 .. self.len() {
+        for i in 0..self.len() {
             if !self.meta[i].is_marked() {
-                unsafe { drop(std::ptr::read(&self.data[i])); }
+                unsafe {
+                    drop(std::ptr::read(&self.data[i]));
+                }
             }
         }
 
@@ -1399,14 +1414,17 @@ impl<T> Default for PartitionVec<T> {
     }
 }
 
-impl<T> std::fmt::Debug for PartitionVec<T> where T: std::fmt::Debug {
+impl<T> std::fmt::Debug for PartitionVec<T>
+where
+    T: std::fmt::Debug,
+{
     fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         // We map the roots to `usize` names.
         let mut map = std::collections::HashMap::with_capacity(self.len());
         let mut builder = formatter.debug_list();
         let mut names = 0;
 
-        for i in 0 .. self.len() {
+        for i in 0..self.len() {
             let root = self.find(i);
 
             let name = if let Some(&name) = map.get(&root) {
@@ -1428,18 +1446,21 @@ impl<T> std::fmt::Debug for PartitionVec<T> where T: std::fmt::Debug {
     }
 }
 
-impl<T> PartialEq for PartitionVec<T> where T: PartialEq {
+impl<T> PartialEq for PartitionVec<T>
+where
+    T: PartialEq,
+{
     fn eq(&self, other: &Self) -> bool {
         if self.len() != other.len() {
-            return false
+            return false;
         }
 
         // We map the roots of self to the roots of other.
         let mut map = std::collections::HashMap::with_capacity(self.len());
 
-        for i in 0 .. self.len() {
+        for i in 0..self.len() {
             if self.data[i] != other.data[i] {
-                return false
+                return false;
             }
 
             let self_root = self.find(i);
@@ -1448,7 +1469,7 @@ impl<T> PartialEq for PartitionVec<T> where T: PartialEq {
             if let Some(&root) = map.get(&self_root) {
                 // If we have seen this root we check if we have the same map.
                 if root != other_root {
-                    return false
+                    return false;
                 }
             } else {
                 // If we have not seen this root we add the relation to the map.
@@ -1462,7 +1483,10 @@ impl<T> PartialEq for PartitionVec<T> where T: PartialEq {
 
 impl<T> Eq for PartitionVec<T> where T: Eq {}
 
-impl<T, I> ops::Index<I> for PartitionVec<T> where I: std::slice::SliceIndex<[T]> {
+impl<T, I> ops::Index<I> for PartitionVec<T>
+where
+    I: std::slice::SliceIndex<[T]>,
+{
     type Output = I::Output;
 
     #[inline]
@@ -1471,7 +1495,10 @@ impl<T, I> ops::Index<I> for PartitionVec<T> where I: std::slice::SliceIndex<[T]
     }
 }
 
-impl<T, I> ops::IndexMut<I> for PartitionVec<T> where I: std::slice::SliceIndex<[T]> {
+impl<T, I> ops::IndexMut<I> for PartitionVec<T>
+where
+    I: std::slice::SliceIndex<[T]>,
+{
     #[inline]
     fn index_mut(&mut self, index: I) -> &mut I::Output {
         (**self).index_mut(index)
@@ -1498,32 +1525,47 @@ impl<T> From<Vec<T>> for PartitionVec<T> {
 
         Self {
             data: vec,
-            meta: (0 .. len).map(Metadata::new).collect(),
+            meta: (0..len).map(Metadata::new).collect(),
         }
     }
 }
 
 impl<T> FromIterator<T> for PartitionVec<T> {
-    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = T> {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
         let data = Vec::from_iter(iter);
         let len = data.len();
 
         Self {
             data,
-            meta: (0 .. len).map(Metadata::new).collect(),
+            meta: (0..len).map(Metadata::new).collect(),
         }
     }
 }
 
-impl<'a, T> FromIterator<&'a T> for PartitionVec<T> where T: Copy + 'a {
-    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = &'a T> {
-        Self::from_iter(iter.into_iter().cloned())
+impl<'a, T> FromIterator<&'a T> for PartitionVec<T>
+where
+    T: Copy + 'a,
+{
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = &'a T>,
+    {
+        Self::from_iter(iter.into_iter().copied())
     }
 }
 
 #[cfg(feature = "rayon")]
-impl<T> FromParallelIterator<T> for PartitionVec<T> where T: Send {
-    fn from_par_iter<I>(par_iter: I) -> Self where I: IntoParallelIterator<Item = T> {
+impl<T> FromParallelIterator<T> for PartitionVec<T>
+where
+    T: Send,
+{
+    fn from_par_iter<I>(par_iter: I) -> Self
+    where
+        I: IntoParallelIterator<Item = T>,
+    {
         let par_iter = par_iter.into_par_iter();
 
         let mut partition = if let Some(len) = par_iter.opt_len() {
@@ -1539,8 +1581,14 @@ impl<T> FromParallelIterator<T> for PartitionVec<T> where T: Send {
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, T> FromParallelIterator<&'a T> for PartitionVec<T> where T: Copy+ Send + Sync + 'a {
-    fn from_par_iter<I>(par_iter: I) -> Self where I: IntoParallelIterator<Item = &'a T> {
+impl<'a, T> FromParallelIterator<&'a T> for PartitionVec<T>
+where
+    T: Copy + Send + Sync + 'a,
+{
+    fn from_par_iter<I>(par_iter: I) -> Self
+    where
+        I: IntoParallelIterator<Item = &'a T>,
+    {
         Self::from_par_iter(par_iter.into_par_iter().cloned())
     }
 }
@@ -1573,7 +1621,10 @@ impl<'a, T> IntoIterator for &'a mut PartitionVec<T> {
 }
 
 #[cfg(feature = "rayon")]
-impl<T> IntoParallelIterator for PartitionVec<T> where T: Send {
+impl<T> IntoParallelIterator for PartitionVec<T>
+where
+    T: Send,
+{
     type Item = T;
     type Iter = rayon::vec::IntoIter<T>;
 
@@ -1583,7 +1634,10 @@ impl<T> IntoParallelIterator for PartitionVec<T> where T: Send {
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, T> IntoParallelIterator for &'a PartitionVec<T> where T: Send + Sync {
+impl<'a, T> IntoParallelIterator for &'a PartitionVec<T>
+where
+    T: Send + Sync,
+{
     type Item = &'a T;
     type Iter = rayon::slice::Iter<'a, T>;
 
@@ -1593,7 +1647,10 @@ impl<'a, T> IntoParallelIterator for &'a PartitionVec<T> where T: Send + Sync {
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, T> IntoParallelIterator for &'a mut PartitionVec<T> where T: Send + Sync {
+impl<'a, T> IntoParallelIterator for &'a mut PartitionVec<T>
+where
+    T: Send + Sync,
+{
     type Item = &'a mut T;
     type Iter = rayon::slice::IterMut<'a, T>;
 
@@ -1603,45 +1660,67 @@ impl<'a, T> IntoParallelIterator for &'a mut PartitionVec<T> where T: Send + Syn
 }
 
 impl<T> Extend<T> for PartitionVec<T> {
-    fn extend<I>(&mut self, iter: I) where I: IntoIterator<Item = T> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = T>,
+    {
         let len = self.len();
         self.data.extend(iter);
         let new_len = self.data.len();
 
-        self.meta.extend((len .. new_len).map(Metadata::new));
+        self.meta.extend((len..new_len).map(Metadata::new));
     }
 }
 
-impl<'a, T> Extend<&'a T> for PartitionVec<T> where T: Copy + 'a {
-    fn extend<I>(&mut self, iter: I) where I: IntoIterator<Item = &'a T> {
+impl<'a, T> Extend<&'a T> for PartitionVec<T>
+where
+    T: Copy + 'a,
+{
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = &'a T>,
+    {
         let len = self.len();
         self.data.extend(iter);
         let new_len = self.data.len();
 
-        self.meta.extend((len .. new_len).map(Metadata::new));
+        self.meta.extend((len..new_len).map(Metadata::new));
     }
 }
 
 #[cfg(feature = "rayon")]
-impl<T> ParallelExtend<T> for PartitionVec<T> where T: Send {
-    fn par_extend<I>(&mut self, par_iter: I) where I: IntoParallelIterator<Item = T>
+impl<T> ParallelExtend<T> for PartitionVec<T>
+where
+    T: Send,
+{
+    fn par_extend<I>(&mut self, par_iter: I)
+    where
+        I: IntoParallelIterator<Item = T>,
     {
         let par_iter = par_iter.into_par_iter();
 
         self.data.par_extend(par_iter);
-        self.meta.par_extend((0 .. self.data.len()).into_par_iter().map(Metadata::new));
+        self.meta
+            .par_extend((0..self.data.len()).into_par_iter().map(Metadata::new));
     }
 }
 
 #[cfg(feature = "rayon")]
-impl<'a, T> ParallelExtend<&'a T> for PartitionVec<T> where T: Copy + Send + Sync + 'a {
-    fn par_extend<I>(&mut self, par_iter: I) where I: IntoParallelIterator<Item = &'a T> {
+impl<'a, T> ParallelExtend<&'a T> for PartitionVec<T>
+where
+    T: Copy + Send + Sync + 'a,
+{
+    fn par_extend<I>(&mut self, par_iter: I)
+    where
+        I: IntoParallelIterator<Item = &'a T>,
+    {
         self.par_extend(par_iter.into_par_iter().cloned())
     }
 }
 
 #[cfg(feature = "proptest")]
-impl<T> Arbitrary for PartitionVec<T> where
+impl<T> Arbitrary for PartitionVec<T>
+where
     T: Arbitrary,
     T::Strategy: 'static,
 {
@@ -1654,29 +1733,31 @@ impl<T> Arbitrary for PartitionVec<T> where
         let (size_range, params) = params;
         let params = (size_range, (params, ()));
 
-        (Vec::<(T, usize)>::arbitrary_with(params)).prop_map(|vec| {
-            let mut partition_vec = Self::with_capacity(vec.len());
+        (Vec::<(T, usize)>::arbitrary_with(params))
+            .prop_map(|vec| {
+                let mut partition_vec = Self::with_capacity(vec.len());
 
-            // We map a `set_number` to an `index` of that set.
-            let mut map = hash_map::HashMap::with_capacity(vec.len());
+                // We map a `set_number` to an `index` of that set.
+                let mut map = hash_map::HashMap::with_capacity(vec.len());
 
-            for (index, (value, mut set_number)) in vec.into_iter().enumerate() {
-                partition_vec.push(value);
+                for (index, (value, set_number)) in vec.into_iter().enumerate() {
+                    partition_vec.push(value);
 
-                let set_number = set_number.trailing_zeros();
+                    let set_number = set_number.trailing_zeros();
 
-                match map.entry(set_number) {
-                    hash_map::Entry::Occupied(occupied) => {
-                        partition_vec.union(index, *occupied.get());
-                    },
-                    hash_map::Entry::Vacant(vacant) => {
-                        vacant.insert(index);
+                    match map.entry(set_number) {
+                        hash_map::Entry::Occupied(occupied) => {
+                            partition_vec.union(index, *occupied.get());
+                        }
+                        hash_map::Entry::Vacant(vacant) => {
+                            vacant.insert(index);
+                        }
                     }
                 }
-            }
 
-            partition_vec
-        }).boxed()
+                partition_vec
+            })
+            .boxed()
     }
 }
 
@@ -1705,11 +1786,7 @@ impl<'a, T> Iterator for Set<'a, T> {
         let next = self.partition_vec.meta[current].link();
 
         // We started at the root.
-        self.current = if next == self.root {
-            None
-        } else {
-            Some(next)
-        };
+        self.current = if next == self.root { None } else { Some(next) };
 
         Some((current, &self.partition_vec.data[current]))
     }
@@ -1742,17 +1819,11 @@ impl<'a, T> Iterator for SetMut<'a, T> {
         let next = self.partition_vec.meta[current].link();
 
         // We started at the root.
-        self.current = if next == self.root {
-            None
-        } else {
-            Some(next)
-        };
+        self.current = if next == self.root { None } else { Some(next) };
 
         // This iterator wont give a reference to this value again so it is safe to extend
         // the lifetime of the mutable reference.
-        unsafe {
-            Some((current, extend_mut(&mut self.partition_vec.data[current])))
-        }
+        unsafe { Some((current, extend_mut(&mut self.partition_vec.data[current]))) }
     }
 }
 
@@ -1789,7 +1860,7 @@ impl<'a, T> Iterator for AllSets<'a, T> {
                     partition_vec: self.partition_vec,
                     current: Some(root),
                     root,
-                })
+                });
             }
         }
     }
@@ -1810,7 +1881,7 @@ impl<'a, T> DoubleEndedIterator for AllSets<'a, T> {
                     partition_vec: self.partition_vec,
                     current: Some(root),
                     root,
-                })
+                });
             }
         }
     }
@@ -1846,11 +1917,13 @@ impl<'a, T> Iterator for AllSetsMut<'a, T> {
                 self.done.set(root, true);
 
                 // This is safe because we will not return this set again.
-                unsafe { return Some(SetMut {
-                    partition_vec: extend_mut(self).partition_vec,
-                    current: Some(root),
-                    root,
-                })}
+                unsafe {
+                    return Some(SetMut {
+                        partition_vec: extend_mut(self).partition_vec,
+                        current: Some(root),
+                        root,
+                    });
+                }
             }
         }
     }
@@ -1868,11 +1941,13 @@ impl<'a, T> DoubleEndedIterator for AllSetsMut<'a, T> {
                 self.done.set(root, true);
 
                 // This is safe because we will not return this set again.
-                unsafe { return Some(SetMut {
-                    partition_vec: extend_mut(self).partition_vec,
-                    current: Some(root),
-                    root,
-                })}
+                unsafe {
+                    return Some(SetMut {
+                        partition_vec: extend_mut(self).partition_vec,
+                        current: Some(root),
+                        root,
+                    });
+                }
             }
         }
     }

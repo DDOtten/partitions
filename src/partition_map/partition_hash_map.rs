@@ -1,6 +1,6 @@
 use std::{
-    hash::{Hash, BuildHasher},
     collections::hash_map::{self, HashMap, RandomState},
+    hash::{BuildHasher, Hash},
 };
 
 partition_map![
@@ -11,9 +11,11 @@ partition_map![
     Eq + Hash
 ];
 
-impl<K, V> PartitionHashMap<K, V, std::collections::hash_map::RandomState> where
+impl<K, V> PartitionHashMap<K, V, std::collections::hash_map::RandomState>
+where
     K: Eq + Hash,
 {
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             map: std::collections::HashMap::with_capacity(capacity),
@@ -23,7 +25,8 @@ impl<K, V> PartitionHashMap<K, V, std::collections::hash_map::RandomState> where
     }
 }
 
-impl<K, V, S> PartitionHashMap<K, V, S> where
+impl<K, V, S> PartitionHashMap<K, V, S>
+where
     K: Eq + Hash,
     S: BuildHasher,
 {

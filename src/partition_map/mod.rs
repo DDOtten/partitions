@@ -1,8 +1,11 @@
 #[repr(transparent)]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct UnboundedRef<K>(std::ptr::NonNull<K>) where K: ?Sized;
+struct UnboundedRef<K>(std::ptr::NonNull<K>)
+where
+    K: ?Sized;
 
-impl<'a, K> UnboundedRef<K> where
+impl<'a, K> UnboundedRef<K>
+where
     K: ?Sized,
 {
     #[inline]
@@ -16,7 +19,8 @@ impl<'a, K> UnboundedRef<K> where
     }
 }
 
-impl<K, Q> std::borrow::Borrow<Transparent<Q>> for UnboundedRef<K> where
+impl<K, Q> std::borrow::Borrow<Transparent<Q>> for UnboundedRef<K>
+where
     K: std::borrow::Borrow<Q> + ?Sized,
     Q: ?Sized,
 {
@@ -35,12 +39,11 @@ impl<K, Q> std::borrow::Borrow<Transparent<Q>> for UnboundedRef<K> where
 struct Transparent<Q: ?Sized>(Q);
 
 #[inline]
-fn coerce<Q>(value: &Q) -> &Transparent<Q> where
+fn coerce<Q>(value: &Q) -> &Transparent<Q>
+where
     Q: ?Sized,
 {
-    unsafe {
-        &*(value as *const Q as *const Transparent<Q>)
-    }
+    unsafe { &*(value as *const Q as *const Transparent<Q>) }
 }
 
 macro_rules! partition_map {
@@ -79,7 +82,7 @@ macro_rules! partition_map {
             K: $($key_bounds)*,
         {
             #[inline]
-            pub fn new() -> Self {
+            #[must_use] pub fn new() -> Self {
                 Self {
                     map: $map_struct::new(),
                     vec: PartitionVec::new(),
@@ -143,7 +146,7 @@ macro_rules! partition_map {
                 self.vec.len_of_set(self.map[coerce(key)])
             }
 
-            pub fn amount_of_sets(&self) -> usize {
+            #[must_use] pub fn amount_of_sets(&self) -> usize {
                 let mut done = bit_vec![false; self.vec.len()];
                 let mut count = 0;
 
@@ -158,12 +161,12 @@ macro_rules! partition_map {
             }
 
             #[inline]
-            pub fn len(&self) -> usize {
+            #[must_use] pub fn len(&self) -> usize {
                 self.map.len()
             }
 
             #[inline]
-            pub fn is_empty(&self) -> bool {
+            #[must_use] pub fn is_empty(&self) -> bool {
                 self.map.len() == 0
             }
 
@@ -274,14 +277,14 @@ macro_rules! partition_map {
                 unsafe { Some(self.vec.lazy_remove(index, last_removed)) }
             }
 
-            pub fn keys(&self) -> Keys<K, V> {
+            #[must_use] pub fn keys(&self) -> Keys<K, V> {
                 Keys {
                     iter: self.map.keys(),
                     marker: std::marker::PhantomData,
                 }
             }
 
-            pub fn values(&self) -> Values<K, V> {
+            #[must_use] pub fn values(&self) -> Values<K, V> {
                 Values {
                     iter: self.map.values(),
                     vec: &self.vec,
@@ -295,7 +298,7 @@ macro_rules! partition_map {
                 }
             }
 
-            pub fn iter(&self) -> Iter<K, V> {
+            #[must_use] pub fn iter(&self) -> Iter<K, V> {
                 Iter {
                     iter: self.map.values(),
                     vec: &self.vec,
@@ -447,7 +450,7 @@ macro_rules! partition_map {
                 }
             }
 
-            pub fn key(&self) -> &K {
+            #[must_use] pub fn key(&self) -> &K {
                 match self {
                     Entry::Occupied(occupied) => occupied.key(),
                     Entry::Vacant(vacant) => vacant.key(),
@@ -490,11 +493,11 @@ macro_rules! partition_map {
         impl<'a, K, V> VacantEntry<'a, K, V> where
             K: $($key_bounds)*,
         {
-            pub fn key(&self) -> &K {
+            #[must_use] pub fn key(&self) -> &K {
                 &self.vec[*self.last_removed].0
             }
 
-            pub fn into_key(self) -> K {
+            #[must_use] pub fn into_key(self) -> K {
                 unsafe {
                     let key = std::ptr::read(&self.vec[*self.last_removed].0);
 
@@ -550,11 +553,11 @@ macro_rules! partition_map {
         impl<'a, K, V> OccupiedEntry<'a, K, V> where
             K: $($key_bounds)*,
         {
-            pub fn key(&self) -> &K {
+            #[must_use] pub fn key(&self) -> &K {
                 &self.vec[*self.entry.get()].0
             }
 
-            pub fn get(&self) -> &V {
+            #[must_use] pub fn get(&self) -> &V {
                 &self.vec[*self.entry.get()].1
             }
 
@@ -562,7 +565,7 @@ macro_rules! partition_map {
                 &mut self.vec[*self.entry.get()].1
             }
 
-            pub fn into_mut(self) -> &'a mut V {
+            #[must_use] pub fn into_mut(self) -> &'a mut V {
                 &mut self.vec[*self.entry.get()].1
             }
 
@@ -571,7 +574,7 @@ macro_rules! partition_map {
                 value
             }
 
-            pub fn remove(self) -> V {
+            #[must_use] pub fn remove(self) -> V {
                 let index = self.entry.remove();
 
                 let last_removed = *self.last_removed;
@@ -579,7 +582,7 @@ macro_rules! partition_map {
                 unsafe { self.vec.lazy_remove(index, last_removed).1 }
             }
 
-            pub fn remove_entry(self) -> (K, V) {
+            #[must_use] pub fn remove_entry(self) -> (K, V) {
                 let index = self.entry.remove();
 
                 let last_removed = *self.last_removed;
@@ -786,5 +789,5 @@ macro_rules! partition_map {
     };
 }
 
-pub mod partition_hash_map;
 pub mod partition_btree_map;
+pub mod partition_hash_map;

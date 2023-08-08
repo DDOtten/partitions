@@ -73,7 +73,7 @@ macro_rules! partitions_count_expr {
 /// A convenient macro to create a `BitVec` similar to `vec!`.
 macro_rules! bit_vec {
     ($element: expr; $len: expr) => {
-        bit_vec::BitVec::from_elem($len, $element);
+        bit_vec::BitVec::from_elem($len, $element)
     };
     ($($value: expr),*) => {
         {
@@ -96,8 +96,8 @@ mod disjoint_sets;
 mod partition_map;
 
 pub use disjoint_sets::partition_vec::{self, PartitionVec};
-pub use partition_map::partition_hash_map::{self, PartitionHashMap};
 pub use partition_map::partition_btree_map::{self, PartitionBTreeMap};
+pub use partition_map::partition_hash_map::{self, PartitionHashMap};
 
 /// This takes an mutable reference and return a mutable reference with a different lifetime.
 ///

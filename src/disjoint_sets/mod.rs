@@ -2,5 +2,5 @@
 //!
 //! [disjoint-sets/union-find]: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
 
-pub mod partition_vec;
 mod metadata;
+pub mod partition_vec;
